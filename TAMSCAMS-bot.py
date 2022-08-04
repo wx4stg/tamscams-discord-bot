@@ -11,7 +11,7 @@ from time import sleep
 from os import path, remove, uname
 from datetime import datetime as dt
 
-botTokensDict = json.load(open("botTokens.json", "r"))
+botTokensDict = json.load(open("bottokens.json", "r"))
 discordToken = botTokensDict["discord"]
 twitterBearerToken = botTokensDict["twitter-bearer-token"]
 discordClient = discord.Client()
