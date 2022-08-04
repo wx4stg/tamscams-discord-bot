@@ -1,0 +1,14 @@
+[Unit]
+Description=tamscams-discord-bot
+After=network-online.target
+
+[Service]
+ExecStart=/opt/mamba/envs/discord/bin/python3 /home/hdwx/tamscams-discord-bot/TAMSCAMS-bot.py
+Restart=always
+RestartSec=120
+WorkingDirectory=/home/hdwx/tamscams-discord-bot
+User=hdwx
+SyslogIdentifier=tamscams-discord-bot
+
+[Install]
+WantedBy=multi-user.target
