@@ -59,7 +59,7 @@ async def on_connect():
         }
         for groupName, groupID in facebookGroupKeys.items():
             try:
-                posts = facebookAPI.get(groupID+"/feed", fields="id,message,created_time")["data"]
+                posts = facebookAPI.get(groupID+"/feed", fields="id,message,created_time", retry=0)["data"]
             except Exception as e:
                 posts = list()
             for post in posts:
