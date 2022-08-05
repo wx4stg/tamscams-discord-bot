@@ -9,14 +9,17 @@ import tweepy
 from facepy import GraphAPI
 from time import sleep
 from os import path, remove, uname
-from datetime import datetime as dt
+from datetime import datetime as dt, timedelta
 
 botTokensDict = json.load(open("bottokens.json", "r"))
 discordToken = botTokensDict["discord"]
 twitterBearerToken = botTokensDict["twitter-bearer-token"]
 discordClient = discord.Client()
 twitterClient = tweepy.Client(bearer_token=twitterBearerToken, wait_on_rate_limit=True)
-facebookAPI = GraphAPI(botTokensDict["facebook-key"])
+if botTokensDict["facebook-key"] != "":
+    facebookAPI = GraphAPI(botTokensDict["facebook-key"])
+else:
+    facebookAPI = None
 
 async def findTwitterChannel():
     allChannels = discordClient.get_all_channels()
@@ -32,6 +35,7 @@ async def on_connect():
         print("Error: No access to #twitter-feed")
         exit()
     await twitterChannel.send("Bot initialized successfully on "+uname()[1]+" at "+dt.now().strftime("%Y-%m-%d %H:%M:%S"))
+    lastFacebookCheck = dt.utcnow()
     while True:
         if path.exists("alreadyProcessed.json"):
             alreadyProcessedIDs = json.load(open("alreadyProcessed.json", "r"))
@@ -52,23 +56,26 @@ async def on_connect():
                 else:
                     alreadyProcessedIDs.append(str(tweet.id))
                     await twitterChannel.send("https://twitter.com/" + tweetUsername + "/status/" + str(tweetID))
-        facebookGroupKeys = {
-            "TASC" : "408280209379614",
-            "TAMSCAMS" : "394074280611522",
-            "Test group" : "768418997695857"
-        }
-        for groupName, groupID in facebookGroupKeys.items():
-            try:
-                posts = facebookAPI.get(groupID+"/feed", fields="id,message,created_time", retry=0)["data"]
-            except Exception as e:
-                posts = list()
-            for post in posts:
-                if str(post["id"]) in alreadyProcessedIDs:
-                    continue
-                else:
-                    alreadyProcessedIDs.append(post["id"])
-                    if "message" in post.keys():
-                        await twitterChannel.send(f"New facebook post in {groupName}:\n{post['message']}\nhttps://www.facebook.com/{groupID}/posts/{str(post['id'].replace(groupID+'_', ''))}")
+        if facebookAPI is not None:
+            if dt.utcnow() - lastFacebookCheck > timedelta(hours=1):
+                lastFacebookCheck = dt.utcnow()
+                facebookGroupKeys = {
+                    "TASC" : "408280209379614",
+                    "TAMSCAMS" : "394074280611522",
+                    "Test group" : "768418997695857"
+                }
+                for groupName, groupID in facebookGroupKeys.items():
+                    try:
+                        posts = facebookAPI.get(groupID+"/feed", fields="id,message,created_time", retry=0)["data"]
+                    except Exception as e:
+                        posts = list()
+                    for post in posts:
+                        if str(post["id"]) in alreadyProcessedIDs:
+                            continue
+                        else:
+                            alreadyProcessedIDs.append(post["id"])
+                            if "message" in post.keys():
+                                await twitterChannel.send(f"New facebook post in {groupName}:\n{post['message']}\nhttps://www.facebook.com/{groupID}/posts/{str(post['id'].replace(groupID+'_', ''))}")
         if path.exists("alreadyProcessed.json"):
             remove("alreadyProcessed.json")
         with open("alreadyProcessed.json", "w") as jsonWrite:
