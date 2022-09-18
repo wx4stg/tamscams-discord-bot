@@ -34,7 +34,7 @@ async def on_connect():
     if twitterChannel is None:
         print("Error: No access to #twitter-feed")
         exit()
-    await twitterChannel.send("Bot initialized successfully on "+uname()[1]+" at "+dt.now().strftime("%Y-%m-%d %H:%M:%S"))
+    #await twitterChannel.send("Bot initialized successfully on "+uname()[1]+" at "+dt.now().strftime("%Y-%m-%d %H:%M:%S"))
     lastFacebookCheck = dt.utcnow()
     while True:
         if path.exists("alreadyProcessed.json"):
@@ -55,7 +55,7 @@ async def on_connect():
                     continue
                 else:
                     alreadyProcessedIDs.append(str(tweet.id))
-                    await twitterChannel.send("https://twitter.com/" + tweetUsername + "/status/" + str(tweetID))
+                    await twitterChannel.send("https://fxtwitter.com/" + tweetUsername + "/status/" + str(tweetID))
         if facebookAPI is not None:
             if dt.utcnow() - lastFacebookCheck > timedelta(hours=1):
                 lastFacebookCheck = dt.utcnow()
@@ -66,7 +66,7 @@ async def on_connect():
                 }
                 for groupName, groupID in facebookGroupKeys.items():
                     try:
-                        posts = facebookAPI.get(groupID+"/feed", fields="id,message,created_time", retry=0)["data"]
+                        posts = facebookAPI.get(groupID+"/feed", fields="id,message,created_time", retry=0, limit=10)["data"]
                     except Exception as e:
                         posts = list()
                     for post in posts:
